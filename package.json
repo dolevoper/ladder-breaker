@@ -1,0 +1,15 @@
+{
+  "name": "ladder-breaker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "static-server"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "static-server": "^2.2.1"
+  }
+}
