@@ -14,3 +14,9 @@ h1 {
     display: block;
     margin: 0 auto;
 }
+
+#controls {
+    display: flex;
+    justify-content: center;
+    margin: 10px;
+}

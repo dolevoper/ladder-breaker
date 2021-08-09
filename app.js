@@ -1,5 +1,9 @@
 (function () {
     const board = document.getElementById("board");
+    const generateNewPositionButton = document.getElementById("generateNewPosition");
+
+    generateNewPositionButton.addEventListener("click", generateProblem);
+
     const ctx = board.getContext("2d");
 
     const intersections = 19;
@@ -18,32 +22,43 @@
         [16, 10],
         [10, 10]
     ];
-    const stones = [
-        ["white", 4, 17],
-        ["white", 3, 16],
-        ["white", 3, 15],
-        ["white", 4, 14],
-        ["white", 4, 13],
-        ["black", 5, 17],
-        ["black", 3, 14],
-        ["black", 3, 13],
-        ["black", 3, 12],
-        ["black", 4, 12],
+    let stones = [];
 
-        ["white", 17, 3],
-        ["white", 16, 2],
-        ["white", 15, 2],
-        ["white", 15, 3],
-        ["white", 14, 4],
-        ["black", 16, 3],
-        ["black", 14, 3],
-        ["black", 15, 4],
-        ["black", 15, 5],
-        ["black", 17, 5],
-        ["black", 13, 4]
+    const sourceComponents = [
+        [
+            ["white", 5, 2],
+            ["white", 4, 1],
+            ["white", 3, 1],
+            ["white", 3, 2],
+            ["white", 2, 3],
+            ["black", 4, 2],
+            ["black", 2, 2],
+            ["black", 3, 3],
+            ["black", 3, 4],
+            ["black", 5, 4],
+            ["black", 1, 3]
+        ]
+    ];
+
+    const destinationComponents = [
+        [
+            ["white", 2, 6],
+            ["white", 1, 5],
+            ["white", 1, 4],
+            ["white", 2, 3],
+            ["white", 2, 2],
+            ["black", 3, 6],
+            ["black", 1, 3],
+            ["black", 1, 2],
+            ["black", 1, 1],
+            ["black", 2, 1]
+        ]
     ];
 
     const cordToPos = n => (n - 1) * distanceBetweenIntersections + boardMargin;
+    const binary = fn => (a, b) => fn(a, b);
+
+    generateProblem();
 
     requestAnimationFrame(function draw() {
         ctx.resetTransform();
@@ -93,5 +108,34 @@
             ctx.fillStyle = color;
             ctx.fill();
         })
+    }
+
+    function generateProblem() {
+        const sourceComponent = sourceComponents[Math.floor(Math.random() * sourceComponents.length)];
+        const destinationComponent = destinationComponents[Math.floor(Math.random() * destinationComponents.length)];
+
+        const sourceDimensions = calcComponentDimensions(sourceComponent);
+        const sourceOffset = [
+            Math.floor(Math.random() * ((intersections + 1) / 2 - sourceDimensions[0] + 1)),
+            Math.floor(Math.random() * ((intersections + 1) / 2 - sourceDimensions[1] + 1))
+        ];
+
+        const destinationDimensions = calcComponentDimensions(destinationComponent);
+        const destinationOffset = [
+            Math.floor(Math.random() * ((intersections + 1) / 2 - destinationDimensions[0] + 1)),
+            Math.floor(Math.random() * ((intersections + 1) / 2 - destinationDimensions[1] + 1))
+        ];
+
+        stones = [
+            ...sourceComponent.map(([color, x, y]) => [color, x + (intersections - 1) / 2 + sourceOffset[0], y + sourceOffset[1]]),
+            ...destinationComponent.map(([color, x, y]) => [color, x + destinationOffset[0], y + (intersections - 1) / 2 + destinationOffset[1]])
+        ];
+    }
+
+    function calcComponentDimensions(component) {
+        return [
+            component.map(([_, x]) => x).reduce(binary(Math.max), 0),
+            component.map(([_, __, y]) => y).reduce(binary(Math.max), 0)
+        ];
     }
 })();
