@@ -4,6 +4,10 @@ body {
     box-sizing: border-box;
 }
 
+h1 {
+    text-align: center;
+}
+
 #board {
     width: 1000px;
     height: 1000px;
