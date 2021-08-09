@@ -57,6 +57,9 @@
 
     const cordToPos = n => (n - 1) * distanceBetweenIntersections + boardMargin;
     const binary = fn => (a, b) => fn(a, b);
+    const identity = x => x;
+    const either = (fx, gx) => !!Math.floor(Math.random() * 2) ? fx : gx;
+    const maybe = fn => either(fn, identity);
 
     generateProblem();
 
@@ -111,24 +114,40 @@
     }
 
     function generateProblem() {
-        const sourceComponent = sourceComponents[Math.floor(Math.random() * sourceComponents.length)];
-        const destinationComponent = destinationComponents[Math.floor(Math.random() * destinationComponents.length)];
+        const components = selectComponents();
 
-        const sourceDimensions = calcComponentDimensions(sourceComponent);
+        placeComponents(components);
+        
+        stones = stones
+            .map(maybe(mirrorX))
+            .map(maybe(mirrorY))
+            .map(maybe(flipColors))
+            .map(maybe(either(rotateCW, rotateCCW)));
+    }
+
+    function selectComponents() {
+        return {
+            source: sourceComponents[Math.floor(Math.random() * sourceComponents.length)],
+            destination: destinationComponents[Math.floor(Math.random() * destinationComponents.length)]
+        };
+    }
+
+    function placeComponents({ source, destination }) {
+        const sourceDimensions = calcComponentDimensions(source);
         const sourceOffset = [
             Math.floor(Math.random() * ((intersections + 1) / 2 - sourceDimensions[0] + 1)),
             Math.floor(Math.random() * ((intersections + 1) / 2 - sourceDimensions[1] + 1))
         ];
 
-        const destinationDimensions = calcComponentDimensions(destinationComponent);
+        const destinationDimensions = calcComponentDimensions(destination);
         const destinationOffset = [
             Math.floor(Math.random() * ((intersections + 1) / 2 - destinationDimensions[0] + 1)),
             Math.floor(Math.random() * ((intersections + 1) / 2 - destinationDimensions[1] + 1))
         ];
 
         stones = [
-            ...sourceComponent.map(([color, x, y]) => [color, x + (intersections - 1) / 2 + sourceOffset[0], y + sourceOffset[1]]),
-            ...destinationComponent.map(([color, x, y]) => [color, x + destinationOffset[0], y + (intersections - 1) / 2 + destinationOffset[1]])
+            ...source.map(([color, x, y]) => [color, x + (intersections - 1) / 2 + sourceOffset[0], y + sourceOffset[1]]),
+            ...destination.map(([color, x, y]) => [color, x + destinationOffset[0], y + (intersections - 1) / 2 + destinationOffset[1]])
         ];
     }
 
@@ -137,5 +156,25 @@
             component.map(([_, x]) => x).reduce(binary(Math.max), 0),
             component.map(([_, __, y]) => y).reduce(binary(Math.max), 0)
         ];
+    }
+
+    function mirrorX([color, x, y]) {
+        return [color, intersections + 1 - x, y];
+    }
+
+    function mirrorY([color, x, y]) {
+        return [color, x, intersections + 1 - y];
+    }
+
+    function flipColors([color, x, y]) {
+        return [color === "white" ? "black" : "white", x, y];
+    }
+
+    function rotateCW([color, x, y]) {
+        return [color, intersections - y + 1, x];
+    }
+
+    function rotateCCW([color, x, y]) {
+        return [color, y, x];
     }
 })();
