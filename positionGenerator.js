@@ -1,5 +1,6 @@
 import { intersections } from "./consts.js";
 import { sourceComponents, destinationComponents } from "./components.js";
+import { flipColor } from "./utils.js";
 import { maybe, either, randInt } from "./randomness.js";
 import { getCords, mapColor, mapCords, mapX, mapY } from "./stone.js";
 
@@ -45,6 +46,5 @@ function calcComponentDimensions(component) {
 }
 
 const mirror = c => intersections + 1 - c;
-const flipColor = color => ({ white: "black", black: "white" })[color];
 const rotateCW = ([x, y]) => [intersections - y + 1, x];
 const rotateCCW = ([x, y]) => [y, x];

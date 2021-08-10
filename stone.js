@@ -5,5 +5,6 @@ export const mapCords = fn => ([color, x, y, isLaddered]) => stone(color, ...fn(
 export const mapX = fn => ([color, x, y, isLaddered]) => stone(color, fn(x), y, isLaddered);
 export const mapY = fn => ([color, x, y, isLaddered]) => stone(color, x, fn(y), isLaddered);
 
-export const getCords = ([_, x, y]) => [x, y];
+export const getCords = ([, x, y]) => [x, y];
 export const getColor = ([color]) => color;
+export const getIsLaddered = ([,,, isLaddered]) => isLaddered;

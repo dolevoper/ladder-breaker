@@ -20,3 +20,7 @@ h1 {
     justify-content: center;
     margin: 10px;
 }
+
+.hidden {
+    display: none;
+}
