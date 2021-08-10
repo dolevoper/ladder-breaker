@@ -1,4 +1,5 @@
 import { intersections, boardSize, boardMargin, distanceBetweenIntersections, starPoints } from "./consts.js";
+import { getColor, getCords } from "./stone.js";
 import { cordToPos } from "./utils.js";
 
 export function drawBoard(ctx) {
@@ -27,12 +28,12 @@ export function drawBoard(ctx) {
 }
 
 export function drawStones(ctx, stones) {
-    stones.forEach(([color, ...cords]) => {
-        const [x, y] = cords.map(cordToPos);
+    stones.forEach(stone => {
+        const [x, y] = getCords(stone).map(cordToPos);
 
         ctx.beginPath();
         ctx.arc(x, y, distanceBetweenIntersections / 2, 0, 2 * Math.PI, true);
-        ctx.fillStyle = color;
+        ctx.fillStyle = getColor(stone);
         ctx.fill();
     });
 }
