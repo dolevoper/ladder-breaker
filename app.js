@@ -1,6 +1,6 @@
 import { boardSize } from "./consts.js";
 import { drawBoard, drawStones } from "./drawing.js";
-import { fromConfig, randomConfig } from "./positionGenerator.js";
+import { configFromQuery, configToQuery, fromConfig, isConfigValid, randomConfig } from "./positionGenerator.js";
 import { generateVariations } from "./variationGenerator.js";
 
 export const canvasSize = 1000;
@@ -8,22 +8,35 @@ export const canvasSize = 1000;
 const canvas = document.getElementById("board");
 const generateNewPositionButton = document.getElementById("generateNewPosition");
 const showVariationsButton = document.getElementById("showVariations");
+const shareButton = document.getElementById("share");
 const variationsList = document.getElementById("variations");
+const toaster = document.getElementById("toaster");
 const ctx = canvas.getContext("2d");
 
-let config;
+let config = window.location.search ?
+    configFromQuery(window.location.search) :
+    randomConfig();
 let position;
 let variations;
 let display;
 
-generateNewPositionButton.addEventListener("click", init);
+generateNewPositionButton.addEventListener("click", function () {
+    config = randomConfig();
+
+    init();
+});
 
 showVariationsButton.addEventListener("click", function () {
     variationsList.classList.remove("hidden");
 });
 
+shareButton.addEventListener("click", async function () {
+    await navigator.clipboard.writeText(`${window.location.protocol}//${window.location.host}${window.location.pathname}?${configToQuery(config)}`);
+
+    toast("Copied to clipboard");
+});
+
 function init() {
-    config = randomConfig();
     position = fromConfig(config);
     variations = generateVariations(position);
     display = position;
@@ -46,6 +59,11 @@ function init() {
     });
 }
 
+if (!isConfigValid(config)) {
+    config = randomConfig();
+    toast("Invalid URL");
+}
+
 init();
 
 requestAnimationFrame(function draw() {
@@ -64,4 +82,13 @@ requestAnimationFrame(function draw() {
 function drawBackground() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
+}
+
+async function toast(message) {
+    toaster.innerHTML = `<h2>${message}</h2>`;
+    toaster.classList.remove("hidden");
+
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    toaster.classList.add("hidden");
 }
