@@ -1,6 +1,6 @@
 import { boardSize } from "./consts.js";
 import { drawBoard, drawStones } from "./drawing.js";
-import { generatePosition } from "./positionGenerator.js";
+import { fromConfig, randomConfig } from "./positionGenerator.js";
 import { generateVariations } from "./variationGenerator.js";
 
 export const canvasSize = 1000;
@@ -11,6 +11,7 @@ const showVariationsButton = document.getElementById("showVariations");
 const variationsList = document.getElementById("variations");
 const ctx = canvas.getContext("2d");
 
+let config;
 let position;
 let variations;
 let display;
@@ -22,7 +23,8 @@ showVariationsButton.addEventListener("click", function () {
 });
 
 function init() {
-    position = generatePosition();
+    config = randomConfig();
+    position = fromConfig(config);
     variations = generateVariations(position);
     display = position;
 

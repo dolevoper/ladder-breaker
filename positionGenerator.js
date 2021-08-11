@@ -1,17 +1,32 @@
 import { intersections } from "./consts.js";
 import { sourceComponents, destinationComponents } from "./components.js";
-import { flipColor } from "./utils.js";
+import { compose, flipColor, identity } from "./utils.js";
 import { maybe, either, randInt } from "./randomness.js";
 import { getCords, mapColor, mapCords, mapX, mapY } from "./stone.js";
 
-export function generatePosition() {
-    const components = selectComponents();
+export function randomConfig() {
+    const generateOffset = dim => randInt((intersections + 1) / 2 - dim + 1);
+    const { source, destination } = selectComponents();
+    const sourceOffset = calcComponentDimensions(source).map(generateOffset);
+    const destinationOffset = calcComponentDimensions(destination).map(generateOffset);
 
-    return placeComponents(components)
-        .map(maybe(mapX(mirror)))
-        .map(maybe(mapY(mirror)))
-        .map(maybe(mapColor(flipColor)))
-        .map(maybe(either(mapCords(rotateCW), mapCords(rotateCCW))));
+    return {
+        source,
+        destination,
+        sourceOffset,
+        destinationOffset,
+        transformations: [
+            maybe(mapX(mirror)),
+            maybe(mapY(mirror)),
+            maybe(mapColor(flipColor)),
+            maybe(either(mapCords(rotateCW), mapCords(rotateCCW)))
+        ]
+    };
+}
+
+export function fromConfig({ transformations = [], ...componentsData }) {
+    return placeComponents(componentsData)
+        .map(transformations.reduce(compose, identity));
 }
 
 function selectComponents() {
@@ -21,11 +36,7 @@ function selectComponents() {
     };
 }
 
-function placeComponents({ source, destination }) {
-    const generateOffset = dim => randInt((intersections + 1) / 2 - dim + 1);
-    const sourceOffset = calcComponentDimensions(source).map(generateOffset);
-    const destinationOffset = calcComponentDimensions(destination).map(generateOffset);
-
+function placeComponents({ source, destination, sourceOffset, destinationOffset }) {
     const sum = ([x1, y1]) => ([x2, y2]) => [x1 + x2, y1 + y2];
 
     return [
