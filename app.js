@@ -1,3 +1,4 @@
+// this is a test commit
 import { boardSize } from "./consts.js";
 import { drawBoard, drawStones } from "./drawing.js";
 import { generatePosition } from "./positionGenerator.js";
