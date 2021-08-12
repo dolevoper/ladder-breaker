@@ -57,18 +57,26 @@ function ladder(board, ladderedStone) {
 
 function getLiberties(cords, board) {
     const stoneColor = colorAt(cords, board);
+    const visited = new Set();
+    const queue = [cords];
+    const liberties = [];
 
-    return getNeighbors(cords)
-        .flatMap(cordToCheck => {
-            const colorAtCord = colorAt(cordToCheck, board);
+    while (queue.length > 0) {
+        const cordToCheck = queue.pop();
 
-            if (!colorAtCord) return [cordToCheck];
+        const key = `${cordToCheck[0]},${cordToCheck[1]}`;
+        if (visited.has(key)) continue;
+        visited.add(key);
 
-            return colorAtCord === stoneColor ?
-                getLiberties(cordToCheck, placeStone(cords, flipColor(stoneColor), board)) :
-                [];
-        })
-        .filter((a, i, liberties) => !liberties.slice(i + 1).some(b => a[0] === b[0] && a[1] === b[1]));
+        const colorAtCord = colorAt(cordToCheck, board);
+
+        if (!colorAtCord) {
+            liberties.push(cordToCheck);
+        } else if (colorAtCord === stoneColor) {
+            queue.push(...getNeighbors(cordToCheck));
+        }
+    }
+    return liberties;
 }
 
 function makeMove(color, cords, board) {
