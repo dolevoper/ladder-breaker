@@ -5,7 +5,7 @@ export function generateVariations(stones) {
     const board = stonesToBoard(stones);
     const ladderedStone = getCords(stones.find(getIsLaddered));
 
-    return ladder(board, ladderedStone).map(position => boardToStones(position, ladderedStone));
+    return escapeLadder(board, ladderedStone).map(({position, winner}) => boardToStones(position, ladderedStone));
 }
 
 function stonesToBoard(stones) {
@@ -24,42 +24,90 @@ function boardToStones(board, ladderedStone) {
     }));
 }
 
-function ladder(board, ladderedStone) {
+function escapeLadder(board, ladderedStone) {
     if (!board) return [];
 
-    const [runningMove] = getLiberties(ladderedStone, board);
     const defenderColor = colorAt(ladderedStone, board);
-    const positionToCapture = makeMove(defenderColor, runningMove, board);
+    const attackerColor = flipColor(defenderColor);
 
-    if (!positionToCapture) return [board];
+    const {liberties, neighbors} = getLibertiesAndNeighbors(ladderedStone, board);
+    const candidateMoves = liberties;
+    for (const neighbor of neighbors) {
+        const neighborLiberties = getLiberties(neighbor, board);
+        if (neighborLiberties.length === 1)
+            candidateMoves.push(neighborLiberties[0]);
+    }
 
-    const candidateMoves = getLiberties(ladderedStone, positionToCapture);
+    const winningOutcomes = [], runningMoves = [];
+    for (const move of candidateMoves) {
+        const position = makeMove(defenderColor, move, board);
+        if (!position) continue;
 
-    if (candidateMoves.length > 2) return [positionToCapture];
-    if (candidateMoves.length === 1) return [board];
+        const liberties = getLiberties(ladderedStone, position).length;
+        if (liberties > 2) {
+            winningOutcomes.push({position, winner: defenderColor});
+        } else if (liberties === 2) {
+            runningMoves.push(position);
+        }
+    }
 
-    const nextPositions = candidateMoves
-        .map(move => makeMove(flipColor(defenderColor), move, positionToCapture))
-        .filter(position => {
-            if (!position) return false;
+    const runningOutcomes = runningMoves.flatMap(position => captureLadder(position, ladderedStone));
+    winningOutcomes.push(...runningOutcomes.filter(({winner}) => winner === defenderColor));
 
-            const positionAfterNextDefense = makeMove(defenderColor, getLiberties(ladderedStone, position)[0], position);
+    if (winningOutcomes.length > 0) {
+        return winningOutcomes;
+    } else if (runningOutcomes.length > 0) {
+        return runningOutcomes;
+    } else {
+        return {position: board, winner: attackerColor};
+    }
+}
 
-            if (!positionAfterNextDefense) return true;
+function captureLadder(board, ladderedStone) {
+    const defenderColor = colorAt(ladderedStone, board);
+    const attackerColor = flipColor(defenderColor);
 
-            return getLiberties(ladderedStone, positionAfterNextDefense).length < 3;
-        });
+    const winningOutcomes = [], chasingMoves = [];
+    for (const move of getLiberties(ladderedStone, board)) {
+        const position = makeMove(attackerColor, move, board);
+        if (!position) continue;
 
-    if (!nextPositions.length) return [positionToCapture];
+        if (!colorAt(ladderedStone, position)) {
+            winningOutcomes.push({position: board, winner: attackerColor});
+        } else {
+            const liberties = getLiberties(ladderedStone, position);
+            if (liberties.length === 1) {
+                const positionAfterEscape = makeMove(defenderColor, liberties[0], position);
+                if (!positionAfterEscape) {
+                    winningOutcomes.push({position, winner: attackerColor});
+                } else if (getLiberties(ladderedStone, positionAfterEscape).length <= 2) {
+                    chasingMoves.push(position);
+                }
+            }
+        }
+    }
 
-    return nextPositions.flatMap(position => ladder(position, ladderedStone));
+    const chasingOutcomes = chasingMoves.flatMap(position => escapeLadder(position, ladderedStone));
+    winningOutcomes.push(...chasingOutcomes.filter(({winner}) => winner === attackerColor));
+
+    if (winningOutcomes.length > 0) {
+        return winningOutcomes;
+    } else if (chasingOutcomes.length > 0) {
+        return chasingOutcomes;
+    } else {
+        return {position: board, winner: defenderColor};
+    }
 }
 
 function getLiberties(cords, board) {
+    return getLibertiesAndNeighbors(cords, board).liberties;
+}
+
+function getLibertiesAndNeighbors(cords, board) {
     const stoneColor = colorAt(cords, board);
     const visited = new Set();
     const queue = [cords];
-    const liberties = [];
+    const liberties = [], neighbors = [];
 
     while (queue.length > 0) {
         const cordToCheck = queue.pop();
@@ -74,9 +122,11 @@ function getLiberties(cords, board) {
             liberties.push(cordToCheck);
         } else if (colorAtCord === stoneColor) {
             queue.push(...getNeighbors(cordToCheck));
+        } else {
+            neighbors.push(cordToCheck);
         }
     }
-    return liberties;
+    return {liberties, neighbors};
 }
 
 function makeMove(color, cords, board) {
