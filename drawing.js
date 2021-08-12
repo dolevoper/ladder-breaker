@@ -3,7 +3,7 @@ import { getColor, getCords } from "./stone.js";
 import { cordToPos } from "./utils.js";
 
 export function drawBoard(ctx) {
-    ctx.fillStyle = "brown";
+    ctx.fillStyle = "#c84";
     ctx.fillRect(0, 0, boardSize, boardSize);
 
     ctx.strokeRect(boardMargin, boardMargin, boardSize - 2 * boardMargin, boardSize - 2 * boardMargin);
@@ -32,7 +32,7 @@ export function drawStones(ctx, stones) {
         const [x, y] = getCords(stone).map(cordToPos);
 
         ctx.beginPath();
-        ctx.arc(x, y, distanceBetweenIntersections / 2, 0, 2 * Math.PI, true);
+        ctx.arc(x, y, distanceBetweenIntersections * 0.48, 0, 2 * Math.PI, true);
         ctx.fillStyle = getColor(stone);
         ctx.fill();
     });

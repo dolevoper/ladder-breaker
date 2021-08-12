@@ -3,7 +3,7 @@ import { drawBoard, drawStones } from "./drawing.js";
 import { configFromQuery, configToQuery, fromConfig, isConfigValid, randomConfig } from "./positionGenerator.js";
 import { generateVariations } from "./variationGenerator.js";
 
-export const canvasSize = 1000;
+export const canvasSize = 900;
 
 const canvas = document.getElementById("board");
 const generateNewPositionButton = document.getElementById("generateNewPosition");
