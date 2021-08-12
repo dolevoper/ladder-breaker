@@ -175,11 +175,19 @@ function removeGroup(at, board) {
     );
 }
 
-function getNeighbors(cords) {
-    return [
-        [cords[0], cords[1] - 1],
-        [cords[0], cords[1] + 1],
-        [cords[0] + 1, cords[1]],
-        [cords[0] - 1, cords[1]]
-    ].filter(([x, y]) => x > 0 && x < 20 && y > 0 && y < 20);
+const NEIGHBORS = [];
+for (let x = 1; x <= 19; x++) {
+    NEIGHBORS.push([]);
+    for (let y = 1; y <= 19; y++) {
+        NEIGHBORS[x - 1].push([
+            [x, y - 1],
+            [x, y + 1],
+            [x + 1, y],
+            [x - 1, y]
+        ].filter(([a, b]) => a > 0 && a < 20 && b > 0 && b < 20));
+    }
+}
+
+function getNeighbors([x, y]) {
+    return NEIGHBORS[x - 1][y - 1];
 }
