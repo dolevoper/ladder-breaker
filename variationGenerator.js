@@ -30,12 +30,12 @@ function escapeLadder(board, ladderedStone) {
     const defenderColor = colorAt(ladderedStone, board);
     const attackerColor = flipColor(defenderColor);
 
-    const {liberties, neighbors} = getLibertiesAndNeighbors(ladderedStone, board);
+    const {liberties, surrounding} = getLibertiesAndSurroundingStones(ladderedStone, board);
     const candidateMoves = liberties;
-    for (const neighbor of neighbors) {
-        const neighborLiberties = getLiberties(neighbor, board);
-        if (neighborLiberties.length === 1)
-            candidateMoves.push(neighborLiberties[0]);
+    for (const target of surrounding) {
+        const targetLiberties = getLiberties(target, board);
+        if (targetLiberties.length === 1)
+            candidateMoves.push(targetLiberties[0]);
     }
 
     const winningOutcomes = [], runningMoves = [];
@@ -49,6 +49,10 @@ function escapeLadder(board, ladderedStone) {
         } else if (liberties === 2) {
             runningMoves.push(position);
         }
+    }
+
+    if (winningOutcomes.length > 0) {
+        return winningOutcomes;
     }
 
     const runningOutcomes = runningMoves.flatMap(position => captureLadder(position, ladderedStone));
@@ -87,6 +91,10 @@ function captureLadder(board, ladderedStone) {
         }
     }
 
+    if (winningOutcomes.length > 0) {
+        return winningOutcomes;
+    }
+
     const chasingOutcomes = chasingMoves.flatMap(position => escapeLadder(position, ladderedStone));
     winningOutcomes.push(...chasingOutcomes.filter(({winner}) => winner === attackerColor));
 
@@ -100,33 +108,37 @@ function captureLadder(board, ladderedStone) {
 }
 
 function getLiberties(cords, board) {
-    return getLibertiesAndNeighbors(cords, board).liberties;
+    return getLibertiesAndSurroundingStones(cords, board).liberties;
 }
 
-function getLibertiesAndNeighbors(cords, board) {
+function getLibertiesAndSurroundingStones(cords, board) {
     const stoneColor = colorAt(cords, board);
     const visited = new Set();
     const queue = [cords];
-    const liberties = [], neighbors = [];
+    const liberties = [], surrounding = [];
 
     while (queue.length > 0) {
         const cordToCheck = queue.pop();
-
-        const key = `${cordToCheck[0]},${cordToCheck[1]}`;
-        if (visited.has(key)) continue;
-        visited.add(key);
 
         const colorAtCord = colorAt(cordToCheck, board);
 
         if (!colorAtCord) {
             liberties.push(cordToCheck);
         } else if (colorAtCord === stoneColor) {
-            queue.push(...getNeighbors(cordToCheck));
+            for (const neighbor of getNeighbors(cordToCheck)) {
+                const key = `${neighbor[0]},${neighbor[1]}`;
+                if (!visited.has(key)) {
+                    queue.push(neighbor);
+                }
+            }
         } else {
-            neighbors.push(cordToCheck);
+            surrounding.push(cordToCheck);
         }
+
+        const key = `${cordToCheck[0]},${cordToCheck[1]}`;
+        visited.add(key);
     }
-    return {liberties, neighbors};
+    return {liberties, surrounding};
 }
 
 function makeMove(color, cords, board) {
